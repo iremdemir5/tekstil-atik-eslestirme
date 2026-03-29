@@ -3,7 +3,7 @@
 ## 1. Problem Tanımı
 [cite_start]Türkiye'de tekstil atıklarının geri dönüşüm oranı sadece %6 seviyesindedir[cite: 42]. Özellikle 50.000'den fazla tekstil KOBİ'si, atıklarını teknik analiz (polimer ayrıştırma) ve dijital eşleştirme eksikliği nedeniyle verimli yönetememekte; yıllık ~1 milyon ton hammadde potansiyeli çöpe gitmektedir.
 
-## 2. Kullanıcı Profil Analizi (Detaylı)
+## 2. Kullanıcı Profil Analizi
 - **Tedarikçiler (Atık Sahipleri):** Türkiye genelindeki (özellikle İstanbul ve Çorlu odaklı) 50.000+ tekstil atölyesi ve KOBİ'si. Teknik analiz imkanı kısıtlı olan bu işletmeler, post-endüstriyel kesim artıklarını verimli sınıflandıramamaktadır.
 - **Alıcılar (Endüstriyel Üreticiler):** Başta Uşak bölgesinde (Türkiye'nin geri dönüşüm üssü) günlük 1.700 ton kapasiteyle çalışan 180+ geri dönüşüm fabrikası (Örn: Ergene Recycling, Özbudak Textile). Bu tesisler, yalıtım malzemesi üretimi için sürekli ve analiz edilmiş hammaddeye ihtiyaç duyar.
 - **Uygulama Aracısı:** EU Green Deal regülasyonlarına uyum sağlamaya çalışan marka yöneticileri ve belediye atık yönetim birimleri.
@@ -13,7 +13,7 @@
 1. **Teknik Analiz Motoru:** Fotoğraftan kumaş türü tahmini yapılır. Mevcut rakiplerden farklı olarak AI, kumaşın polimer yapısından yalıtım malzemesi için **termal iletkenlik (k)** ve **termal direnç (R)** değerlerini tahmin ederek manuel laboratuvar testi ihtiyacını %20+ azaltır.
 2. **Akıllı Eşleştirme ve Lojistik:** Atık türünü alıcının teknik ihtiyacıyla eşleştirir ve lojistik maliyetlerini/karbon ayak izini minimize eden rota optimizasyonu sağlar.
 
-## 4. Boşluk Analizi ve Bizim Farkımız (Detaylı)
+## 4. Boşluk Analizi ve Bizim Farkımız
 Rakiplerde (Swatchloop, Reverse Resources, SuperCircle) AI kullanımı olsa da yalıtım odaklı derinlik eksiktir:
 - **Teknik Veri Boşluğu:** Rakipler kumaş sınıflandırması yapsa da yalıtım üretimi için gereken mühendislik değerlerini (R-değeri, termal iletkenlik) hesaplamaz. Bizim modelimiz, rakiplerde olmayan yalıtım odaklı AI hesaplama modeliyle fark yaratır.
 - **KOBİ Odaklılık:** Mevcut platformlar dev markalara odaklanırken, çözümümüz Türkiye'nin üretim bel kemiği olan KOBİ'lerin atıklarını doğrudan endüstriyel ileri dönüşüm rotasına sokar.
