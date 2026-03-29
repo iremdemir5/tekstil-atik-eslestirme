@@ -37,5 +37,5 @@ Rakiplerde (Swatchloop, Reverse Resources, SuperCircle) AI kullanımı olsa da y
 | AB Yeşil Mutabakat (EU Green Deal) fonları | Ekonomik dalgalanmalar ve regülasyonlar |
 
 ## 7. Başarı Kriterleri
-- [cite_start]Bir KOBİ'nin 30 saniye içinde teknik yalıtım potansiyeli verisine ulaşması[cite: 42].
+- [cite_start]Bir KOBİ'nin 30 saniye içinde teknik yalıtım potansiyeli verisine ulaşması[cite: 86].
 - Türkiye'deki tekstil geri dönüşüm oranının dijital eşleştirme ile %6'nın üzerine çıkarılmasına katkı sağlamak.
