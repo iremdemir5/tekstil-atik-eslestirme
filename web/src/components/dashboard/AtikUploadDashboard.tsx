@@ -32,15 +32,6 @@ export default function AtikUploadDashboard() {
   const [isDemoResultReady, setIsDemoResultReady] = React.useState(false)
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
 
-  const timeoutIdRef = React.useRef<number | undefined>(undefined)
-
-  React.useEffect(() => {
-    return () => {
-      const timeoutId = timeoutIdRef.current
-      if (timeoutId) window.clearTimeout(timeoutId)
-    }
-  }, [])
-
   const reset = () => {
     if (isAnalyzing) return
     setFiles([])
@@ -49,26 +40,81 @@ export default function AtikUploadDashboard() {
     setErrorMessage(null)
   }
 
-  /** Backend yokken sadece 2 sn yükleme UI’sı, ardından demo analiz sayfasına gider. */
-  const startAnalysis = () => {
+  const startAnalysis = async () => {
     if (isAnalyzing) return
     if (files.length === 0) {
       setErrorMessage("Lütfen en az 1 görsel yükleyin.")
       return
     }
 
-    if (timeoutIdRef.current) window.clearTimeout(timeoutIdRef.current)
-
     setIsDemoResultReady(false)
     setErrorMessage(null)
     setIsAnalyzing(true)
     setStepIndex(0)
 
-    timeoutIdRef.current = window.setTimeout(() => {
-      timeoutIdRef.current = undefined
+    try {
+      const form = new FormData()
+      for (const file of files) {
+        form.append("images", file)
+      }
+
+      // Bu eski dashboard ekranında şehir/miktar girişi yok.
+      // Backend konteksti için sabit değerler kullanıyoruz.
+      form.append("weight_kg", "100")
+      form.append("city", "İstanbul")
+
+      const res = await fetch("/api/analyze", { method: "POST", body: form })
+      if (!res.ok) {
+        const body = await res.json().catch(() => null) as { message?: string } | null
+        throw new Error(body?.message ?? "Analiz başlatılamadı.")
+      }
+
+      const data = (await res.json()) as {
+        sessionId?: string
+        analysis?: {
+          polymer_composition?: Record<string, number>
+          recommended_use?: "insulation" | "yarn_recycling" | "filling_material"
+          analysis_description?: string | null
+        }
+      }
+
+      if (!data.sessionId) throw new Error("Analiz oturumu oluşturulamadı.")
+      if (!data.analysis) throw new Error("Gemini analiz sonucu alınamadı.")
+
+      const weightNum = 100
+      const polymer_composition = data.analysis.polymer_composition ?? {}
+      const polymer_purity_score = Math.max(...Object.values(polymer_composition), 0)
+      const carbon_saved_kg = Math.round(weightNum * 0.5 * 100) / 100
+
+      const stored = {
+        id: data.sessionId,
+        status: "completed",
+        weight_kg: weightNum,
+        city: "İstanbul",
+        polymer_composition,
+        r_value: 1.42,
+        recycling_score: 74,
+        polymer_purity_score,
+        recommended_use: data.analysis.recommended_use,
+        carbon_saved_kg,
+        analysis_description: data.analysis.analysis_description,
+        created_at: new Date().toISOString(),
+      }
+
+      try {
+        window.localStorage.setItem(`analysis_session_${data.sessionId}`, JSON.stringify(stored))
+      } catch {
+        // localStorage kapalıysa bile sayfaya yönlendiriyoruz.
+      }
+
+      router.push(`/analysis/${data.sessionId}`)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Analiz başlatılamadı."
+      setErrorMessage(message)
+      setIsDemoResultReady(false)
+    } finally {
       setIsAnalyzing(false)
-      router.push("/analysis/demo-123")
-    }, 2000)
+    }
   }
 
   return (

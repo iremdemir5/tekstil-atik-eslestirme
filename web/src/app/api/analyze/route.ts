@@ -72,7 +72,7 @@ export async function POST(request: Request) {
 
       if (uploaded.error) {
         console.error("STORAGE ERROR:", uploaded.error)
-        return jsonError(500, { error: "STORAGE_UPLOAD_FAILED", message: "Görsel yüklenemedi." })
+        // Storage başarısız olsa bile Gemini analizi üretip response dönmek istiyoruz.
       }
     }
 
@@ -95,13 +95,7 @@ export async function POST(request: Request) {
 
     if (created.error) {
       console.error("DB INSERT ERROR:", created.error)
-      const devDetails =
-        process.env.NODE_ENV === "development" ? created.error.message : undefined
-      return jsonError(500, {
-        error: "DB_INSERT_FAILED",
-        message: "Analiz kaydı oluşturulamadı.",
-        ...(devDetails ? { details: devDetails } : {}),
-      })
+      // DB insert başarısız olsa bile Gemini analizi üretip response dönmek istiyoruz.
     }
 
     const gemini = await analyzeTextileWasteWithGeminiVision({
@@ -113,22 +107,27 @@ export async function POST(request: Request) {
 
     const carbonSavedKg = Math.round(weightKg * 0.5 * 100) / 100
 
-    await supabase
-      .from("analysis_sessions")
-      .update({
-        status: "completed",
-        gemini_raw_response: gemini,
-        polymer_composition: gemini.polymer_composition,
-        r_value: 1.42,
-        thermal_conductivity: 0.035,
-        recycling_score: 74,
-        polymer_purity_score: Math.max(...Object.values(gemini.polymer_composition)),
-        recommended_use: gemini.recommended_use,
-        carbon_saved_kg: carbonSavedKg,
-        analysis_description: gemini.analysis_description,
-        processing_finished_at: new Date().toISOString(),
-      })
-      .eq("id", sessionId)
+    try {
+      await supabase
+        .from("analysis_sessions")
+        .update({
+          status: "completed",
+          gemini_raw_response: gemini,
+          // Şema uyuşmazlıklarında burada hata alabiliriz; UI yine Gemini sonucunu kullanacak.
+          polymer_composition: gemini.polymer_composition,
+          r_value: 1.42,
+          thermal_conductivity: 0.035,
+          recycling_score: 74,
+          polymer_purity_score: Math.max(...Object.values(gemini.polymer_composition)),
+          recommended_use: gemini.recommended_use,
+          carbon_saved_kg: carbonSavedKg,
+          analysis_description: gemini.analysis_description,
+          processing_finished_at: new Date().toISOString(),
+        })
+        .eq("id", sessionId)
+    } catch (err) {
+      console.error("DB UPDATE FAILED (non-blocking):", err)
+    }
 
     return Response.json({ sessionId, status: "completed", analysis: gemini })
 

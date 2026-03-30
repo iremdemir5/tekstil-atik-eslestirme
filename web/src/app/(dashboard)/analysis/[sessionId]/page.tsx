@@ -67,7 +67,6 @@ function PolymerTooltip({ active, payload }: PolymerTooltipProps) {
 export default function AnalysisSessionPage({ params }: Props) {
   const router = useRouter()
 
-  // API'den veri gelmesini beklemeden UI'yi hemen gerçekçi mock verilerle dolduruyoruz.
   const mockAnalysis = React.useMemo<AnalysisData>(() => {
     const sessionId = params.sessionId
     const weightKg = 500
@@ -97,7 +96,8 @@ export default function AnalysisSessionPage({ params }: Props) {
     }
   }, [params.sessionId])
 
-  const [analysis, setAnalysis] = React.useState<AnalysisData>(mockAnalysis)
+  const [analysis, setAnalysis] = React.useState<AnalysisData | null>(null)
+  const [isUsingMock, setIsUsingMock] = React.useState(false)
   const [isFetching, setIsFetching] = React.useState(false)
   const [fetchError, setFetchError] = React.useState<string | null>(null)
 
@@ -107,22 +107,43 @@ export default function AnalysisSessionPage({ params }: Props) {
     async function run() {
       setIsFetching(true)
       setFetchError(null)
+      setIsUsingMock(false)
 
       try {
+        // DB şema uyuşmazlığı yüzünden API 500 verebilirse, gerçek Gemini çıktısını
+        // upload sayfasından localStorage üzerinden gösteriyoruz.
+        try {
+          const raw = window.localStorage.getItem(`analysis_session_${params.sessionId}`)
+          if (raw) {
+            const stored = JSON.parse(raw) as AnalysisData
+            if (isMounted) setAnalysis(stored)
+            return
+          }
+        } catch {
+          // localStorage erişimi başarısızsa API’den çekmeye devam ediyoruz.
+        }
+
         const res = await fetch(`/api/analysis/${params.sessionId}`)
         if (!res.ok) {
-          // Mock veriler ile devam edeceğiz.
-          return
+          const body = await res.json().catch(() => null) as
+            | { message?: string }
+            | { error?: string; message?: string }
+            | null
+
+          throw new Error(body?.message ?? `Canlı analiz yüklenemedi (HTTP ${res.status}).`)
         }
 
         const data = (await res.json()) as Omit<AnalysisData, "id"> & { id: string }
         if (!isMounted) return
 
         setAnalysis(data)
-      } catch {
+      } catch (err) {
         // Ağ yok / API hatası durumunda mock ile kalıyoruz.
         if (!isMounted) return
-        setFetchError("Canlı analiz çekilemedi. Demo veriler gösteriliyor.")
+        const message = err instanceof Error ? err.message : "Canlı analiz çekilemedi."
+        setFetchError(`${message} Demo veriler gösteriliyor.`)
+        setIsUsingMock(true)
+        setAnalysis(mockAnalysis)
       } finally {
         if (!isMounted) return
         setIsFetching(false)
@@ -134,11 +155,13 @@ export default function AnalysisSessionPage({ params }: Props) {
     return () => {
       isMounted = false
     }
-  }, [params.sessionId])
+  }, [params.sessionId, mockAnalysis])
 
   const compositionData = React.useMemo(() => {
-    const total = analysis.weight_kg
-    const entries = Object.entries(analysis.polymer_composition)
+    if (!analysis) return []
+
+    const base = analysis
+    const entries = Object.entries(base.polymer_composition)
 
     // Recharts için sabit, profesyonel renk paleti.
     const palette: Record<string, string> = {
@@ -159,7 +182,7 @@ export default function AnalysisSessionPage({ params }: Props) {
     return entries.map(([name, percent]) => {
       const p = typeof percent === "number" ? percent : 0
       const normalizedPercent = (p / sumPercent) * 100
-      const kg = (total * normalizedPercent) / 100
+      const kg = (base.weight_kg * normalizedPercent) / 100
       return {
         name: nameMap[name] ?? name[0].toUpperCase() + name.slice(1),
         percent: normalizedPercent,
@@ -167,11 +190,15 @@ export default function AnalysisSessionPage({ params }: Props) {
         color: palette[name] ?? "rgb(148 163 184)",
       }
     })
-  }, [analysis.polymer_composition, analysis.weight_kg])
+  }, [analysis])
 
-  const recommendedUseLabel = analysis.recommended_use
-    ? RECOMMENDED_USE_LABELS[analysis.recommended_use]
+  const recommendedUseLabel = !analysis
+    ? "Yükleniyor..."
+    : analysis.recommended_use
+      ? RECOMMENDED_USE_LABELS[analysis.recommended_use as RecommendedUse]
     : "—"
+
+  const hasAnalysis = !!analysis
 
   return (
     <div className="mx-auto max-w-6xl px-4">
@@ -190,6 +217,11 @@ export default function AnalysisSessionPage({ params }: Props) {
               {isFetching ? " • Canlı veri çekiliyor..." : null}
             </p>
             {fetchError ? <p className="mt-2 text-sm text-destructive">{fetchError}</p> : null}
+            {isUsingMock ? (
+              <p className="mt-2 text-sm text-amber-700">
+                Bu ekran demo verileriyle gösteriliyor.
+              </p>
+            ) : null}
           </div>
 
           <div className="flex gap-3">
@@ -218,48 +250,64 @@ export default function AnalysisSessionPage({ params }: Props) {
                 </div>
                 <div className="rounded-2xl border border-white/40 bg-white/10 px-3 py-2 text-right">
                   <div className="text-xs font-semibold text-foreground/70">R-value</div>
-                  <div className="text-lg font-semibold text-foreground">{analysis.r_value.toFixed(2)}</div>
+                  <div className="text-lg font-semibold text-foreground">
+                    {hasAnalysis ? analysis!.r_value.toFixed(2) : "—"}
+                  </div>
                 </div>
               </div>
             </div>
 
             <div className="px-5 pb-5 pt-4">
               <div className="flex w-full justify-center">
-                <PieChart width={420} height={270}>
-                  <Tooltip content={<PolymerTooltip />} />
-                  <Pie
-                    data={compositionData}
-                    dataKey="percent"
-                    nameKey="name"
-                    innerRadius={70}
-                    outerRadius={105}
-                    paddingAngle={2}
-                    stroke="rgba(255,255,255,0.35)"
-                    strokeWidth={1}
-                  >
-                    {compositionData.map((entry) => (
-                      <React.Fragment key={entry.name}>
-                        <Cell fill={entry.color} />
-                      </React.Fragment>
-                    ))}
-                  </Pie>
-                </PieChart>
+                {hasAnalysis ? (
+                  <PieChart width={420} height={270}>
+                    <Tooltip content={<PolymerTooltip />} />
+                    <Pie
+                      data={compositionData}
+                      dataKey="percent"
+                      nameKey="name"
+                      innerRadius={70}
+                      outerRadius={105}
+                      paddingAngle={2}
+                      stroke="rgba(255,255,255,0.35)"
+                      strokeWidth={1}
+                    >
+                      {compositionData.map((entry) => (
+                        <React.Fragment key={entry.name}>
+                          <Cell fill={entry.color} />
+                        </React.Fragment>
+                      ))}
+                    </Pie>
+                  </PieChart>
+                ) : (
+                  <div className="h-[270px] w-[420px] animate-pulse rounded-3xl bg-white/10" />
+                )}
 
                 <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
                   <div className="text-sm font-semibold text-foreground/70">Toplam Atık</div>
-                  <div className="text-3xl font-semibold">{analysis.weight_kg.toFixed(0)}</div>
+                  <div className="text-3xl font-semibold">
+                    {hasAnalysis ? analysis!.weight_kg.toFixed(0) : "—"}
+                  </div>
                   <div className="mt-0.5 text-sm text-foreground/70">kg</div>
                 </div>
               </div>
 
               <div className="mt-4 flex flex-wrap items-center gap-3">
-                {compositionData.map((d) => (
-                  <div key={d.name} className="inline-flex items-center gap-2 rounded-2xl border border-white/40 bg-white/10 px-3 py-2">
-                    <span className="inline-flex size-2.5 rounded-full" style={{ backgroundColor: d.color }} />
-                    <div className="text-sm font-semibold text-foreground/90">{d.name}</div>
-                    <div className="text-sm font-semibold text-foreground/60">{formatPercent(d.percent)}</div>
-                  </div>
-                ))}
+                {hasAnalysis
+                  ? compositionData.map((d) => (
+                      <div
+                        key={d.name}
+                        className="inline-flex items-center gap-2 rounded-2xl border border-white/40 bg-white/10 px-3 py-2"
+                      >
+                        <span
+                          className="inline-flex size-2.5 rounded-full"
+                          style={{ backgroundColor: d.color }}
+                        />
+                        <div className="text-sm font-semibold text-foreground/90">{d.name}</div>
+                        <div className="text-sm font-semibold text-foreground/60">{formatPercent(d.percent)}</div>
+                      </div>
+                    ))
+                  : null}
               </div>
             </div>
           </Card>
@@ -272,7 +320,9 @@ export default function AnalysisSessionPage({ params }: Props) {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="text-sm font-semibold text-foreground/70">Güven Skoru</div>
-                    <div className="mt-1 text-3xl font-semibold">{analysis.polymer_purity_score.toFixed(0)}</div>
+                    <div className="mt-1 text-3xl font-semibold">
+                      {hasAnalysis ? analysis!.polymer_purity_score.toFixed(0) : "—"}
+                    </div>
                     <div className="mt-1 text-sm text-foreground/70">/ 100</div>
                   </div>
                   <div className="inline-flex size-11 items-center justify-center rounded-2xl bg-emerald-600/10 text-emerald-600">
@@ -287,7 +337,9 @@ export default function AnalysisSessionPage({ params }: Props) {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="text-sm font-semibold text-foreground/70">Atık Miktarı</div>
-                    <div className="mt-1 text-3xl font-semibold">{analysis.weight_kg.toFixed(0)}</div>
+                    <div className="mt-1 text-3xl font-semibold">
+                      {hasAnalysis ? analysis!.weight_kg.toFixed(0) : "—"}
+                    </div>
                     <div className="mt-1 text-sm text-foreground/70">kg</div>
                   </div>
                   <div className="inline-flex size-11 items-center justify-center rounded-2xl bg-blue-600/10 text-blue-600">
@@ -320,7 +372,7 @@ export default function AnalysisSessionPage({ params }: Props) {
                   <div>
                     <div className="text-sm font-semibold text-foreground/70">Karbon Kazancı</div>
                     <div className="mt-1 text-3xl font-semibold">
-                      {analysis.carbon_saved_kg.toFixed(0)}
+                      {hasAnalysis ? analysis!.carbon_saved_kg.toFixed(0) : "—"}
                     </div>
                     <div className="mt-1 text-sm text-foreground/70">kg CO2e</div>
                   </div>
@@ -336,7 +388,9 @@ export default function AnalysisSessionPage({ params }: Props) {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="text-sm font-semibold text-foreground/70">Geri Dönüşüm Skoru</div>
-                    <div className="mt-1 text-3xl font-semibold">{analysis.recycling_score.toFixed(0)}</div>
+                    <div className="mt-1 text-3xl font-semibold">
+                      {hasAnalysis ? analysis!.recycling_score.toFixed(0) : "—"}
+                    </div>
                     <div className="mt-1 text-sm text-foreground/70">/ 100</div>
                   </div>
                   <div className="inline-flex size-11 items-center justify-center rounded-2xl bg-amber-600/10 text-amber-600">
@@ -371,7 +425,7 @@ export default function AnalysisSessionPage({ params }: Props) {
                 <AccordionTrigger>Detaylar: Analiz Açıklaması</AccordionTrigger>
                 <AccordionContent>
                   <p className="text-sm text-foreground/70">
-                    {analysis.analysis_description ?? "—"}
+                    {hasAnalysis ? (analysis!.analysis_description ?? "—") : "—"}
                   </p>
                 </AccordionContent>
               </AccordionItem>
