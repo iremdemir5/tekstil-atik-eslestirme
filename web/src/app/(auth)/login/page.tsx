@@ -54,6 +54,13 @@ export default function LoginPage() {
     // Backend auth henüz bağlı değil: frontend deneyimi için kısa simülasyon
     await new Promise((r) => setTimeout(r, 900));
 
+    // MVP auth: demo oturum bayrağı (gerçek auth entegrasyonu gelince kaldırılacak)
+    try {
+      window.localStorage?.setItem("tae_demo_authed", "1");
+    } catch {
+      // localStorage kapalı olabilir; sessizce devam
+    }
+
     router.push(redirect);
   };
 

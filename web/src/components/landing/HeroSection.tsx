@@ -1,6 +1,22 @@
+"use client";
+
+import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+const DEMO_AUTH_FLAG_KEY = "tae_demo_authed";
 
 export default function HeroSection() {
+  const router = useRouter();
+
+  const onStartFreeAnalysis = React.useCallback(() => {
+    const isAuthed =
+      typeof window !== "undefined" &&
+      window.localStorage?.getItem(DEMO_AUTH_FLAG_KEY) === "1";
+
+    router.push(isAuthed ? "/upload" : "/register");
+  }, [router]);
+
   return (
     <section className="relative overflow-hidden">
       <div className="absolute inset-0 -z-10 heroGradient" aria-hidden />
@@ -26,12 +42,13 @@ export default function HeroSection() {
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Link
-                href="/register"
+              <button
+                type="button"
+                onClick={onStartFreeAnalysis}
                 className="inline-flex h-11 items-center justify-center rounded-full bg-emerald-600 px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700"
               >
                 Ücretsiz Analiz Başlat
-              </Link>
+              </button>
 
               <Link
                 href="#how"
