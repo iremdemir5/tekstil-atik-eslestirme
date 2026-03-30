@@ -113,6 +113,7 @@ export default function UploadPage() {
   const [weightKg, setWeightKg] = React.useState<string>("");
   const [city, setCity] = React.useState<string>("");
   const [isDragging, setIsDragging] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string>("");
 
   const totalCount = selectedImages.length;
@@ -185,6 +186,49 @@ export default function UploadPage() {
   };
 
   const isFormValid = selectedImages.length >= 1 && selectedImages.length <= 3 && weightKg !== "" && city !== "";
+
+  const startAnalyze = async () => {
+    if (isSubmitting) return;
+    setError("");
+
+    if (!isFormValid) {
+      setError("Lütfen fotoğraf, miktar ve şehir alanlarını doldurun.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      const formData = new FormData();
+      for (const img of selectedImages) formData.append("images", img.file);
+      formData.set("weight_kg", weightKg);
+      formData.set("city", city);
+
+      const res = await fetch("/api/analyze", { method: "POST", body: formData });
+
+      let json: unknown = null;
+      try {
+        json = await res.json();
+      } catch {
+        json = null;
+      }
+
+      // eslint-disable-next-line no-console
+      console.log("/api/analyze response:", { ok: res.ok, status: res.status, json });
+
+      if (!res.ok) {
+        const message =
+          typeof json === "object" && json !== null && "message" in json
+            ? String((json as { message?: unknown }).message)
+            : "Analiz başlatılamadı.";
+        setError(message);
+      }
+    } catch {
+      setError("Bağlantı hatası. Lütfen tekrar deneyin.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-2xl px-4">
@@ -306,29 +350,16 @@ export default function UploadPage() {
 
           <button
             type="button"
-            onClick={() => {
-              const payload = {
-                images: selectedImages.map((x) => ({
-                  name: x.file.name,
-                  type: x.file.type,
-                  size: x.file.size,
-                })),
-                weightKg: weightKg === "" ? null : Number(weightKg),
-                city,
-              };
-              // Şimdilik entegrasyon yok; sonraki adım Gemini
-              // eslint-disable-next-line no-console
-              console.log("AI Analizini Başlat payload:", payload);
-            }}
-            disabled={!isFormValid}
+            onClick={() => void startAnalyze()}
+            disabled={!isFormValid || isSubmitting}
             className={[
               "h-11 w-full rounded-2xl px-5 text-sm font-semibold transition",
-              isFormValid
+              isFormValid && !isSubmitting
                 ? "bg-foreground text-background hover:opacity-90"
                 : "cursor-not-allowed bg-foreground/20 text-foreground/50",
             ].join(" ")}
           >
-            AI Analizini Başlat
+            {isSubmitting ? "Gönderiliyor..." : "AI Analizini Başlat"}
           </button>
         </div>
       </div>
