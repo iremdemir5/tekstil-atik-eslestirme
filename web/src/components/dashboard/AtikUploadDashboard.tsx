@@ -15,6 +15,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
+console.log("Dashboard yüklendi")
+
 const ANALYSIS_MESSAGES = [
   "Görsel yükleniyor...",
   "Gemini AI polimer yapısını analiz ediyor...",
@@ -182,8 +184,10 @@ export default function AtikUploadDashboard() {
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <Button
                   type="button"
-                  onClick={startAnalysis}
-                  disabled={isAnalyzing}
+                  onClick={() => {
+                    console.log('"AI Analizini Başlat" tıklandı')
+                    void startAnalysis()
+                  }}
                   className="h-11 rounded-xl bg-emerald-600 px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-60"
                 >
                   {isAnalyzing ? (
