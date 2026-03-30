@@ -106,7 +106,15 @@ export async function analyzeTextileWasteWithGeminiVision(params: {
 }): Promise<GeminiVisionPolymerAnalysis> {
   const { apiKey, images, context } = params
   const primaryModel = params.model ?? "gemini-1.5-flash"
-  const modelCandidates = [primaryModel, "gemini-1.5-pro"]
+  const staticModelCandidates = [
+    primaryModel,
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
+    "gemini-1.5-flash-latest",
+    "gemini-1.5-flash-8b",
+    "gemini-1.5-pro-latest",
+    "gemini-1.5-pro",
+  ]
   const apiVersions: Array<"v1beta" | "v1"> = ["v1beta", "v1"]
 
   const prompt = [
@@ -142,9 +150,43 @@ export async function analyzeTextileWasteWithGeminiVision(params: {
 
   let lastError: unknown = null
 
+  async function discoverModels(version: "v1beta" | "v1") {
+    try {
+      const url = `https://generativelanguage.googleapis.com/${version}/models?key=${encodeURIComponent(apiKey)}`
+      const res = await fetch(url)
+      if (!res.ok) return [] as string[]
+      const payload = (await res.json()) as {
+        models?: Array<{ name?: string; supportedGenerationMethods?: string[] }>
+      }
+
+      const names: string[] = []
+      for (const m of payload.models ?? []) {
+        const supportsGenerate =
+          Array.isArray(m.supportedGenerationMethods) &&
+          m.supportedGenerationMethods.includes("generateContent")
+        if (!supportsGenerate || !m.name) continue
+
+        const normalized = m.name.startsWith("models/") ? m.name.slice("models/".length) : m.name
+        names.push(normalized)
+      }
+
+      return names
+    } catch {
+      return [] as string[]
+    }
+  }
+
+  const discoveredModelCandidates = Array.from(
+    new Set([
+      ...(await discoverModels("v1beta")),
+      ...(await discoverModels("v1")),
+      ...staticModelCandidates,
+    ]),
+  )
+
   // Bazı modeller/anahtarlar `v1beta` altında bulunmayabiliyor (404).
   // Böyle durumda önce `v1` ile, sonra da alternatif model ile deniyoruz.
-  for (const candidateModel of modelCandidates) {
+  for (const candidateModel of discoveredModelCandidates) {
     for (const apiVersion of apiVersions) {
       try {
         const url = `https://generativelanguage.googleapis.com/${apiVersion}/models/${candidateModel}:generateContent?key=${encodeURIComponent(apiKey)}`
