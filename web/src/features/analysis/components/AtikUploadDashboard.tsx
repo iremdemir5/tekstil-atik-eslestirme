@@ -4,8 +4,8 @@ import * as React from "react"
 import { Loader2, Sparkles } from "lucide-react"
 import { useRouter } from "next/navigation"
 
-import DropZone from "@/components/upload/DropZone"
-import AnalysisLoadingState from "@/components/upload/AnalysisLoadingState"
+import DropZone from "@/features/analysis/components/DropZone"
+import AnalysisLoadingState from "@/features/analysis/components/AnalysisLoadingState"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -275,4 +275,3 @@ export default function AtikUploadDashboard() {
     </div>
   )
 }
-

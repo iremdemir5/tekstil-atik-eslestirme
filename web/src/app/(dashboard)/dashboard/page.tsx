@@ -1,4 +1,4 @@
-import AtikUploadDashboard from "@/components/dashboard/AtikUploadDashboard"
+import AtikUploadDashboard from "@/features/analysis/components/AtikUploadDashboard"
 
 export default function DashboardPage() {
   return <AtikUploadDashboard />

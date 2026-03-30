@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import AnalysisLoadingState from "@/components/upload/AnalysisLoadingState";
+import AnalysisLoadingState from "@/features/analysis/components/AnalysisLoadingState";
 
 type SelectedImage = {
   file: File;
