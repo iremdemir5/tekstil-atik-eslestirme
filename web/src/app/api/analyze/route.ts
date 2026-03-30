@@ -1,5 +1,5 @@
 import { createSupabaseAdminClient } from "@/lib/supabase"
-import { simulateGeminiVisionAnalysis } from "@/lib/gemini"
+import { analyzeTextileWasteWithGeminiVision } from "@/lib/gemini"
 
 export const runtime = "nodejs"
 
@@ -58,10 +58,18 @@ async function ensureDemoProducerId(supabase: ReturnType<typeof createSupabaseAd
 
 export async function POST(request: Request) {
   const supabase = createSupabaseAdminClient()
+  const apiKey = process.env.GEMINI_API_KEY
 
   let sessionId: string | null = null
 
   try {
+    if (!apiKey) {
+      return jsonError(500, {
+        error: "MISSING_GEMINI_API_KEY",
+        message: "GEMINI_API_KEY bulunamadı. .env.local dosyanızı kontrol edin.",
+      })
+    }
+
     const form = await request.formData()
 
     const images = form.getAll("images").filter((v): v is File => v instanceof File)
@@ -163,7 +171,12 @@ export async function POST(request: Request) {
       })
     }
 
-    const gemini = await simulateGeminiVisionAnalysis(normalizedImages)
+    const gemini = await analyzeTextileWasteWithGeminiVision({
+      apiKey,
+      images: normalizedImages,
+      context: { weight_kg: weightKg, city, district },
+      model: "gemini-1.5-flash",
+    })
 
     // MVP: temel skor/hesaplar (gerçek hesaplama Faz 6 — lib/carbon.ts ile)
     const rValue = 1.42
@@ -196,7 +209,7 @@ export async function POST(request: Request) {
       })
     }
 
-    return Response.json({ sessionId, status: "completed" })
+    return Response.json({ sessionId, status: "completed", analysis: gemini })
   } catch {
     if (sessionId) {
       // En iyi çaba: session oluşturulduysa fail'e çek.
