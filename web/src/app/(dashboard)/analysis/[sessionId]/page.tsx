@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts"
+import { Cell, Pie, PieChart, Tooltip } from "recharts"
 import type { TooltipContentProps, TooltipValueType } from "recharts"
 import { ShieldCheck, Recycle, DatabaseZap, Leaf, ArrowLeft } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -224,28 +224,26 @@ export default function AnalysisSessionPage({ params }: Props) {
             </div>
 
             <div className="px-5 pb-5 pt-4">
-              <div className="relative w-full" style={{ height: 270 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Tooltip content={<PolymerTooltip />} />
-                    <Pie
-                      data={compositionData}
-                      dataKey="percent"
-                      nameKey="name"
-                      innerRadius={70}
-                      outerRadius={105}
-                      paddingAngle={2}
-                      stroke="rgba(255,255,255,0.35)"
-                      strokeWidth={1}
-                    >
-                      {compositionData.map((entry) => (
-                        <React.Fragment key={entry.name}>
-                          <Cell fill={entry.color} />
-                        </React.Fragment>
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="flex w-full justify-center">
+                <PieChart width={420} height={270}>
+                  <Tooltip content={<PolymerTooltip />} />
+                  <Pie
+                    data={compositionData}
+                    dataKey="percent"
+                    nameKey="name"
+                    innerRadius={70}
+                    outerRadius={105}
+                    paddingAngle={2}
+                    stroke="rgba(255,255,255,0.35)"
+                    strokeWidth={1}
+                  >
+                    {compositionData.map((entry) => (
+                      <React.Fragment key={entry.name}>
+                        <Cell fill={entry.color} />
+                      </React.Fragment>
+                    ))}
+                  </Pie>
+                </PieChart>
 
                 <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
                   <div className="text-sm font-semibold text-foreground/70">Toplam Atık</div>
