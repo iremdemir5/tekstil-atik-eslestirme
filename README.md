@@ -79,6 +79,15 @@ Ardından tarayıcınızdan ilgili local adresi açarak uygulamayı kullanabilir
 
 ---
 
+## 🧠 Gerçek Veri Bazlı Eşleştirme
+
+Eşleştirme modülünü gerçek firma verileriyle çalışacak şekilde genişletmek için hazırlanan teknik dokümana buradan ulaşabilirsiniz:
+
+- `web/docs/gercek-veri-eslestirme.md`
+- `web/supabase/schema.sql`
+
+---
+
 ## 💚 Sürdürülebilir Gelecek İçin
 
 Tekstil atıklarını ekonomik değere dönüştüren, çevre dostu ve teknoloji odaklı çözümler için bu platform sürekli geliştirilmektedir.
