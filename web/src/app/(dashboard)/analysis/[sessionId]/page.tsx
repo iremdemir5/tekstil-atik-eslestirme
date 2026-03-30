@@ -433,6 +433,100 @@ export default function AnalysisSessionPage({ params }: Props) {
           </div>
         </div>
       </div>
+
+      <div className="mt-10">
+        <div className="flex items-end justify-between gap-4">
+          <div className="space-y-1">
+            <h2 className="text-xl font-semibold">Sizin İçin Bulunan Alıcılar</h2>
+            <p className="text-sm text-foreground/70">
+              Analiz sonuçlarınıza göre önerilen eşleşmeler (mock).
+            </p>
+          </div>
+          <div className="rounded-2xl border border-white/40 bg-white/10 px-4 py-2 text-sm font-semibold text-foreground/80 shadow-sm">
+            3 Öneri
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-4 md:grid-cols-3">
+          {[
+            {
+              id: "eco",
+              name: "EcoYalıtım A.Ş.",
+              sector: "Tekstil Atığından Yalıtım Malzemesi Üretimi",
+              score: 95,
+              location: "İstanbul",
+              badges: ["Pamuk ağırlıklı", "Polyester destekli"],
+            },
+            {
+              id: "ipliktek",
+              name: "İplik-Tek Geri Dönüşüm",
+              sector: "İplik Üretimi",
+              score: 82,
+              location: "Bursa",
+              badges: ["Polyester ağırlıklı", "Pamuk dengeli"],
+            },
+            {
+              id: "global",
+              name: "Global Elyaf Sanayi",
+              sector: "Dolgu Malzemesi",
+              score: 74,
+              location: "Tekirdağ",
+              badges: ["Pamuk/Polyester karışımı", "Diğer lifler"],
+            },
+          ].map((buyer) => (
+            <Card
+              key={buyer.id}
+              className="rounded-3xl border-white/50 bg-white/15 shadow-sm backdrop-blur-md"
+            >
+              <div className="flex h-full flex-col px-5 py-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="truncate text-base font-semibold text-foreground/95">{buyer.name}</div>
+                    <div className="mt-1 text-sm text-foreground/70">{buyer.sector}</div>
+                  </div>
+
+                  <div className="shrink-0 rounded-2xl border border-emerald-600/25 bg-emerald-600/10 px-3 py-2 text-center">
+                    <div className="text-xs font-semibold text-emerald-700">Eşleşme</div>
+                    <div className="mt-0.5 text-lg font-semibold text-emerald-800">
+                      %{buyer.score}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center justify-between gap-3">
+                  <div className="text-sm font-semibold text-foreground/70">
+                    Lokasyon: <span className="text-foreground">{buyer.location}</span>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {buyer.badges.map((b) => (
+                    <span
+                      key={b}
+                      className="inline-flex rounded-full border border-white/40 bg-white/10 px-3 py-1 text-xs font-semibold text-foreground/80 shadow-sm"
+                    >
+                      {b}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="mt-auto pt-5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Mock buton: gerçek entegrasyonda form/endpoint tetiklenebilir.
+                      console.log(`İletişime geç: ${buyer.name}`)
+                    }}
+                    className="h-11 w-full rounded-2xl bg-emerald-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60"
+                  >
+                    İletişime Geç
+                  </button>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
