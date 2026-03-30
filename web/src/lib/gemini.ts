@@ -156,9 +156,32 @@ export async function analyzeTextileWasteWithGeminiVision(params: {
     throw new Error(`GEMINI_HTTP_${res.status}:${text.slice(0, 500)}`)
   }
 
-  const payload = (await res.json()) as any
-  const textOut: string =
-    payload?.candidates?.[0]?.content?.parts?.map((p: any) => p?.text).filter(Boolean).join("\n") ?? ""
+  const payloadUnknown: unknown = await res.json()
+  const textOut: string = (() => {
+    const typed = payloadUnknown as {
+      candidates?: Array<{
+        content?: {
+          parts?: unknown[]
+        }
+      }>
+    }
+
+    const parts = typed?.candidates?.[0]?.content?.parts ?? []
+    const texts: string[] = []
+
+    for (const part of parts) {
+      if (
+        part &&
+        typeof part === "object" &&
+        "text" in part &&
+        typeof (part as { text?: unknown }).text === "string"
+      ) {
+        texts.push((part as { text: string }).text)
+      }
+    }
+
+    return texts.join("\n")
+  })()
 
   const direct = (() => {
     try {

@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
+import AnalysisLoadingState from "@/components/upload/AnalysisLoadingState";
 
 type SelectedImage = {
   file: File;
@@ -94,6 +96,13 @@ const TURKEY_CITIES = [
   "Düzce",
 ] as const;
 
+const ANALYSIS_MESSAGES = [
+  "Görsel yükleniyor...",
+  "Gemini AI polimer yapısını analiz ediyor...",
+  "Termal değerler hesaplanıyor...",
+  "Sonuçlar hazırlanıyor...",
+];
+
 function isAcceptedImage(file: File) {
   return (ACCEPTED_MIME_TYPES as readonly string[]).includes(file.type);
 }
@@ -108,13 +117,16 @@ function formatFileSize(bytes: number) {
 
 export default function UploadPage() {
   const inputRef = React.useRef<HTMLInputElement | null>(null);
+  const router = useRouter();
 
   const [selectedImages, setSelectedImages] = React.useState<SelectedImage[]>([]);
   const [weightKg, setWeightKg] = React.useState<string>("");
   const [city, setCity] = React.useState<string>("");
   const [isDragging, setIsDragging] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [stepIndex, setStepIndex] = React.useState(0);
   const [error, setError] = React.useState<string>("");
+  const timeoutIdRef = React.useRef<number | null>(null);
 
   const totalCount = selectedImages.length;
 
@@ -123,6 +135,12 @@ export default function UploadPage() {
       for (const img of selectedImages) URL.revokeObjectURL(img.previewUrl);
     };
   }, [selectedImages]);
+
+  React.useEffect(() => {
+    return () => {
+      if (timeoutIdRef.current) window.clearTimeout(timeoutIdRef.current);
+    };
+  }, []);
 
   const addFiles = React.useCallback((files: FileList | File[]) => {
     setError("");
@@ -196,42 +214,24 @@ export default function UploadPage() {
       return;
     }
 
-    try {
-      setIsSubmitting(true);
+    if (timeoutIdRef.current) window.clearTimeout(timeoutIdRef.current);
 
-      const formData = new FormData();
-      for (const img of selectedImages) formData.append("images", img.file);
-      formData.set("weight_kg", weightKg);
-      formData.set("city", city);
-
-      const res = await fetch("/api/analyze", { method: "POST", body: formData });
-
-      let json: unknown = null;
-      try {
-        json = await res.json();
-      } catch {
-        json = null;
-      }
-
-      // eslint-disable-next-line no-console
-      console.log("/api/analyze response:", { ok: res.ok, status: res.status, json });
-
-      if (!res.ok) {
-        const message =
-          typeof json === "object" && json !== null && "message" in json
-            ? String((json as { message?: unknown }).message)
-            : "Analiz başlatılamadı.";
-        setError(message);
-      }
-    } catch {
-      setError("Bağlantı hatası. Lütfen tekrar deneyin.");
-    } finally {
+    setIsSubmitting(true);
+    setStepIndex(0);
+    timeoutIdRef.current = window.setTimeout(() => {
+      timeoutIdRef.current = null;
       setIsSubmitting(false);
-    }
+      router.push("/analysis/demo-123");
+    }, 2000);
   };
 
   return (
     <div className="mx-auto max-w-2xl px-4">
+      <AnalysisLoadingState
+        isOpen={isSubmitting}
+        stepIndex={stepIndex}
+        messages={ANALYSIS_MESSAGES}
+      />
       <div className="rounded-3xl border border-white/50 bg-white/40 p-6 shadow-sm backdrop-blur-md">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold">Fotoğraf Yükle</h1>
