@@ -32,15 +32,11 @@ export default function AtikUploadDashboard() {
   const [isDemoResultReady, setIsDemoResultReady] = React.useState(false)
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
 
-  const intervalIdRef = React.useRef<number | undefined>(undefined)
   const timeoutIdRef = React.useRef<number | undefined>(undefined)
 
   React.useEffect(() => {
     return () => {
-      const intervalId = intervalIdRef.current
       const timeoutId = timeoutIdRef.current
-
-      if (intervalId) window.clearInterval(intervalId)
       if (timeoutId) window.clearTimeout(timeoutId)
     }
   }, [])
@@ -53,15 +49,14 @@ export default function AtikUploadDashboard() {
     setErrorMessage(null)
   }
 
-  const startAnalysis = async () => {
+  /** Backend yokken sadece 2 sn yükleme UI’sı, ardından demo analiz sayfasına gider. */
+  const startAnalysis = () => {
     if (isAnalyzing) return
     if (files.length === 0) {
       setErrorMessage("Lütfen en az 1 görsel yükleyin.")
       return
     }
 
-    // Önce timer'ları temizleyelim.
-    if (intervalIdRef.current) window.clearInterval(intervalIdRef.current)
     if (timeoutIdRef.current) window.clearTimeout(timeoutIdRef.current)
 
     setIsDemoResultReady(false)
@@ -69,49 +64,11 @@ export default function AtikUploadDashboard() {
     setIsAnalyzing(true)
     setStepIndex(0)
 
-    const lastIndex = Math.max(0, ANALYSIS_MESSAGES.length - 1)
-    const intervalMs = 2000
-
-    intervalIdRef.current = window.setInterval(() => {
-      setStepIndex((prev) => Math.min(prev + 1, lastIndex))
-    }, intervalMs)
-
     timeoutIdRef.current = window.setTimeout(() => {
-      setStepIndex(lastIndex)
-    }, ANALYSIS_MESSAGES.length * intervalMs)
-
-    try {
-      const formData = new FormData()
-      files.forEach((f) => formData.append("images", f))
-
-      // Dashboard ekranı şu an sadece "fotoğraf yükle" odaklı.
-      // MVP için zorunlu alanlara demo değerler gönderiyoruz.
-      formData.set("weight_kg", "100")
-      formData.set("city", "İstanbul")
-      formData.set("district", "Kadıköy")
-      formData.set("latitude", "40.9919")
-      formData.set("longitude", "29.0287")
-
-      const res = await fetch("/api/analyze", { method: "POST", body: formData })
-      const json = (await res.json()) as
-        | { sessionId: string; status: string }
-        | { error: string; message: string }
-
-      if (!res.ok) {
-        setErrorMessage("message" in json ? json.message : "Analiz başlatılamadı.")
-        return
-      }
-
-      if (intervalIdRef.current) window.clearInterval(intervalIdRef.current)
-      setIsDemoResultReady(true)
-      router.push(`/analysis/${json.sessionId}`)
-    } catch {
-      setErrorMessage("Bağlantı hatası. Lütfen tekrar deneyin.")
-    } finally {
-      if (intervalIdRef.current) window.clearInterval(intervalIdRef.current)
-      if (timeoutIdRef.current) window.clearTimeout(timeoutIdRef.current)
+      timeoutIdRef.current = undefined
       setIsAnalyzing(false)
-    }
+      router.push("/analysis/demo-123")
+    }, 2000)
   }
 
   return (
