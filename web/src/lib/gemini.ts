@@ -267,6 +267,8 @@ export async function analyzeTextileWasteWithGeminiVision(params: {
         const isRetryable =
           message.includes("GEMINI_HTTP_404") ||
           message.includes("GEMINI_HTTP_429") ||
+          (message.includes("GEMINI_HTTP_400") &&
+            message.toLowerCase().includes("image input modality is not enabled")) ||
           message.includes("GEMINI_PARSE_ERROR")
         if (!isRetryable) throw err
       }
@@ -278,7 +280,9 @@ export async function analyzeTextileWasteWithGeminiVision(params: {
   if (
     lastError instanceof Error &&
     (lastError.message.includes("GEMINI_PARSE_ERROR") ||
-      lastError.message.includes("GEMINI_HTTP_429"))
+      lastError.message.includes("GEMINI_HTTP_429") ||
+      (lastError.message.includes("GEMINI_HTTP_400") &&
+        lastError.message.toLowerCase().includes("image input modality is not enabled")))
   ) {
     return simulateGeminiVisionAnalysis(images)
   }
