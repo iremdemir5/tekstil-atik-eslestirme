@@ -105,6 +105,8 @@ export async function analyzeTextileWasteWithGeminiVision(params: {
   model?: string
 }): Promise<GeminiVisionPolymerAnalysis> {
   const { apiKey, images, context } = params
+  const systemMessage =
+    "Sen sürdürülebilir tekstil ve geri dönüşüm konusunda uzmanlaşmış bir yapay zekasın. Görevin, yüklenen fotoğrafları inceleyerek polimer yapılarını en yüksek hassasiyetle tahmin etmek ve bu atıkların tekstil yalıtım paneli (ReTherm) veya iplik geri dönüşümü gibi alanlarda nasıl değerlendirilebileceğine dair profesyonel öneriler sunmaktır."
   const primaryModel = params.model ?? "gemini-1.5-flash"
   const staticModelCandidates = [
     primaryModel,
@@ -196,9 +198,13 @@ export async function analyzeTextileWasteWithGeminiVision(params: {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             contents: [{ role: "user", parts }],
+            systemInstruction: {
+              parts: [{ text: systemMessage }],
+            },
             generationConfig: {
               temperature: 0.2,
               maxOutputTokens: 512,
+              responseMimeType: "application/json",
             },
           }),
         })
