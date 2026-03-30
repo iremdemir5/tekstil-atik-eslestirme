@@ -53,7 +53,10 @@ export default function AtikUploadDashboard() {
 
   const startAnalysis = async () => {
     if (isAnalyzing) return
-    if (files.length === 0) return
+    if (files.length === 0) {
+      setErrorMessage("Lütfen en az 1 görsel yükleyin.")
+      return
+    }
 
     // Önce timer'ları temizleyelim.
     if (intervalIdRef.current) window.clearInterval(intervalIdRef.current)
@@ -180,7 +183,7 @@ export default function AtikUploadDashboard() {
                 <Button
                   type="button"
                   onClick={startAnalysis}
-                  disabled={isAnalyzing || files.length === 0}
+                  disabled={isAnalyzing}
                   className="h-11 rounded-xl bg-emerald-600 px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-60"
                 >
                   {isAnalyzing ? (
