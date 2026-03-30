@@ -102,9 +102,12 @@ export async function analyzeTextileWasteWithGeminiVision(params: {
   apiKey: string
   images: File[]
   context?: { weight_kg?: number | null; city?: string | null; district?: string | null }
-  model?: "gemini-1.5-flash" | "gemini-1.5-pro"
+  model?: string
 }): Promise<GeminiVisionPolymerAnalysis> {
-  const { apiKey, images, context, model = "gemini-1.5-flash" } = params
+  const { apiKey, images, context } = params
+  const primaryModel = params.model ?? "gemini-1.5-flash"
+  const modelCandidates = [primaryModel, "gemini-1.5-pro"]
+  const apiVersions: Array<"v1beta" | "v1"> = ["v1beta", "v1"]
 
   const prompt = [
     "Sen bir tekstil malzeme uzmanısın. Fotoğraflardaki tekstil atığının polimer/lif yapısını tahmin et.",
@@ -137,75 +140,95 @@ export async function analyzeTextileWasteWithGeminiVision(params: {
     parts.push({ inlineData: { mimeType: img.type || "image/jpeg", data } })
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ role: "user", parts }],
-      generationConfig: {
-        temperature: 0.2,
-        maxOutputTokens: 512,
-        responseMimeType: "application/json",
-      },
-    }),
-  })
+  let lastError: unknown = null
 
-  if (!res.ok) {
-    const text = await res.text().catch(() => "")
-    throw new Error(`GEMINI_HTTP_${res.status}:${text.slice(0, 500)}`)
-  }
+  // Bazı modeller/anahtarlar `v1beta` altında bulunmayabiliyor (404).
+  // Böyle durumda önce `v1` ile, sonra da alternatif model ile deniyoruz.
+  for (const candidateModel of modelCandidates) {
+    for (const apiVersion of apiVersions) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/${apiVersion}/models/${candidateModel}:generateContent?key=${encodeURIComponent(apiKey)}`
 
-  const payloadUnknown: unknown = await res.json()
-  const textOut: string = (() => {
-    const typed = payloadUnknown as {
-      candidates?: Array<{
-        content?: {
-          parts?: unknown[]
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts }],
+            generationConfig: {
+              temperature: 0.2,
+              maxOutputTokens: 512,
+              responseMimeType: "application/json",
+            },
+          }),
+        })
+
+        if (!res.ok) {
+          const text = await res.text().catch(() => "")
+          throw new Error(`GEMINI_HTTP_${res.status}:${text.slice(0, 500)}`)
         }
-      }>
-    }
 
-    const parts = typed?.candidates?.[0]?.content?.parts ?? []
-    const texts: string[] = []
+        const payloadUnknown: unknown = await res.json()
+        const textOut: string = (() => {
+          const typed = payloadUnknown as {
+            candidates?: Array<{
+              content?: {
+                parts?: unknown[]
+              }
+            }>
+          }
 
-    for (const part of parts) {
-      if (
-        part &&
-        typeof part === "object" &&
-        "text" in part &&
-        typeof (part as { text?: unknown }).text === "string"
-      ) {
-        texts.push((part as { text: string }).text)
+          const parts = typed?.candidates?.[0]?.content?.parts ?? []
+          const texts: string[] = []
+
+          for (const part of parts) {
+            if (
+              part &&
+              typeof part === "object" &&
+              "text" in part &&
+              typeof (part as { text?: unknown }).text === "string"
+            ) {
+              texts.push((part as { text: string }).text)
+            }
+          }
+
+          return texts.join("\n")
+        })()
+
+        const direct = (() => {
+          try {
+            return JSON.parse(textOut)
+          } catch {
+            return null
+          }
+        })()
+
+        const extracted = direct ?? (() => {
+          const jsonText = extractFirstJsonObject(textOut)
+          if (!jsonText) return null
+          try {
+            return JSON.parse(jsonText)
+          } catch {
+            return null
+          }
+        })()
+
+        const coerced = coerceToAnalysis(extracted)
+        if (!coerced) {
+          throw new Error("GEMINI_PARSE_ERROR")
+        }
+
+        return coerced
+      } catch (err) {
+        lastError = err
+
+        // 404'i yakalayıp diğer kombinasyonları denemeye devam ediyoruz.
+        const message = err instanceof Error ? err.message : ""
+        const isNotFound = message.includes("GEMINI_HTTP_404")
+        if (!isNotFound) throw err
       }
     }
-
-    return texts.join("\n")
-  })()
-
-  const direct = (() => {
-    try {
-      return JSON.parse(textOut)
-    } catch {
-      return null
-    }
-  })()
-
-  const extracted = direct ?? (() => {
-    const jsonText = extractFirstJsonObject(textOut)
-    if (!jsonText) return null
-    try {
-      return JSON.parse(jsonText)
-    } catch {
-      return null
-    }
-  })()
-
-  const coerced = coerceToAnalysis(extracted)
-  if (!coerced) {
-    throw new Error("GEMINI_PARSE_ERROR")
   }
 
-  return coerced
+  throw lastError ?? new Error("GEMINI_HTTP_FAILED")
 }
 
