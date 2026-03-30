@@ -7,7 +7,7 @@ export default function HeroSection() {
   return (
     <section className="relative overflow-hidden">
       <div className="absolute inset-0 -z-10 heroGradient" aria-hidden />
-      <div className="absolute inset-0 -z-9 heroTexture" aria-hidden />
+      <div className="absolute inset-0 -z-10 heroTexture pointer-events-none" aria-hidden />
 
       <div className="mx-auto max-w-6xl px-4 pb-16 pt-28 sm:pt-32">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-center">
