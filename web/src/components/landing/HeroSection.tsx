@@ -42,13 +42,17 @@ export default function HeroSection() {
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <button
-                type="button"
-                onClick={onStartFreeAnalysis}
-                className="inline-flex h-11 items-center justify-center rounded-full bg-emerald-600 px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700"
-              >
-                Ücretsiz Analiz Başlat
-              </button>
+            <Link
+  href="/register"
+  className="inline-flex h-11 items-center justify-center rounded-full bg-emerald-600 px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700"
+>
+  Ücretsiz Analiz Başlat
+</Link>
+```
+
+Sonra Cursor'un chat kutusuna şunu yaz:
+```
+app/(auth)/register/page.tsx dosyası yok. Basit bir kayıt sayfası oluştur: e-posta, şifre, şirket adı alanları olsun.
 
               <Link
                 href="#how"
