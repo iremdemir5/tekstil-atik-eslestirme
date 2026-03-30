@@ -1,0 +1,15 @@
+# Genel
+.DS_Store
+
+# Ortam değişkenleri
+.env.local
+.env.*.local
+
+# Node / Next
+node_modules
+.next/
+web/.next/
+
+# Vercel
+.vercel
+

@@ -1,0 +1,14 @@
+// PRD ilerledikçe Supabase SQL şeması bu dosyaya modellenerek Prisma üzerinden
+// tip-safe erişim sağlanacak.
+//
+// Bu dosya şu an proje iskeleti için placeholder’dır.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
