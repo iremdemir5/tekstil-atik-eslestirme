@@ -65,8 +65,10 @@ export default function AtikUploadDashboard() {
 
       const res = await fetch("/api/analyze", { method: "POST", body: form })
       if (!res.ok) {
-        const body = await res.json().catch(() => null) as { message?: string } | null
-        throw new Error(body?.message ?? "Analiz başlatılamadı.")
+        const body = (await res.json().catch(() => null)) as { message?: string; details?: string } | null
+        const details = body?.details
+        const message = body?.message ?? "Analiz başlatılamadı."
+        throw new Error(details ? `${message} (${details})` : message)
       }
 
       const data = (await res.json()) as {

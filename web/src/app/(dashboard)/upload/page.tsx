@@ -223,11 +223,12 @@ export default function UploadPage() {
       const res = await fetch("/api/analyze", { method: "POST", body: form });
 
       if (!res.ok) {
-        const body = await res.json().catch(() => null) as
-          | { message?: string }
-          | { error?: string; message?: string }
+        const body = (await res.json().catch(() => null)) as
+          | { message?: string; details?: string }
           | null;
-        throw new Error(body?.message ?? "Analiz başlatılamadı.");
+        const details = body?.details;
+        const message = body?.message ?? "Analiz başlatılamadı.";
+        throw new Error(details ? `${message} (${details})` : message);
       }
 
       const data = (await res.json()) as {

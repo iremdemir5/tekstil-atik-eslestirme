@@ -157,7 +157,10 @@ export async function analyzeTextileWasteWithGeminiVision(params: {
             generationConfig: {
               temperature: 0.2,
               maxOutputTokens: 512,
-              responseMimeType: "application/json",
+              // v1 endpoint snake_case bekler.
+              ...(apiVersion === "v1"
+                ? { response_mime_type: "application/json" }
+                : { responseMimeType: "application/json" }),
             },
           }),
         })

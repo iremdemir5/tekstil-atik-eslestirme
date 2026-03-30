@@ -133,6 +133,11 @@ export async function POST(request: Request) {
 
   } catch (err) {
     console.error("ANALYZE ERROR:", err)
-    return jsonError(500, { error: "INTERNAL_ERROR", message: "Bir hata oluştu, lütfen tekrar deneyin" })
+    const details = process.env.NODE_ENV === "development" ? (err instanceof Error ? err.message : String(err)) : undefined
+    return jsonError(500, {
+      error: "INTERNAL_ERROR",
+      message: "Bir hata oluştu, lütfen tekrar deneyin",
+      ...(details ? { details } : {}),
+    })
   }
 }
