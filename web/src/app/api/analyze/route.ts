@@ -210,7 +210,8 @@ export async function POST(request: Request) {
     }
 
     return Response.json({ sessionId, status: "completed", analysis: gemini })
-  } catch {
+  } catch (err) {
+    console.error("ANALYZE ERROR:", err)
     if (sessionId) {
       // En iyi çaba: session oluşturulduysa fail'e çek.
       await supabase
