@@ -29,6 +29,12 @@ Projede aşağıdaki teknolojiler kullanılmaktadır:
 
 ---
 
+## ✨ Özellikler
+
+- 🚀 Adım 4 - AI Entegrasyonu Güçlendirme: Gemini API entegrasyonu ile görsel analiz yapılarak, tekstil atıkları için polimer oranları tahmini ve yapılandırılmış JSON çıktısı ile profesyonel geri dönüşüm önerileri sunulmaktadır.
+
+---
+
 ## ⚙️ Kurulum Adımları
 
 Projeyi yerel ortamda çalıştırmak için aşağıdaki adımları izleyin:
