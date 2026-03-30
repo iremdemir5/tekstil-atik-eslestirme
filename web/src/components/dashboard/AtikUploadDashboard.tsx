@@ -1,0 +1,225 @@
+"use client"
+
+import * as React from "react"
+import { Loader2, Sparkles } from "lucide-react"
+
+import DropZone from "@/components/upload/DropZone"
+import AnalysisLoadingState from "@/components/upload/AnalysisLoadingState"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+
+const ANALYSIS_MESSAGES = [
+  "Görsel yükleniyor...",
+  "Gemini AI polimer yapısını analiz ediyor...",
+  "Termal değerler hesaplanıyor...",
+  "Sonuçlar hazırlanıyor...",
+]
+
+export default function AtikUploadDashboard() {
+  const [files, setFiles] = React.useState<File[]>([])
+  const [isAnalyzing, setIsAnalyzing] = React.useState(false)
+  const [stepIndex, setStepIndex] = React.useState(0)
+  const [isDemoResultReady, setIsDemoResultReady] = React.useState(false)
+
+  const intervalIdRef = React.useRef<number | undefined>(undefined)
+  const timeoutIdRef = React.useRef<number | undefined>(undefined)
+
+  React.useEffect(() => {
+    return () => {
+      const intervalId = intervalIdRef.current
+      const timeoutId = timeoutIdRef.current
+
+      if (intervalId) window.clearInterval(intervalId)
+      if (timeoutId) window.clearTimeout(timeoutId)
+    }
+  }, [])
+
+  const reset = () => {
+    if (isAnalyzing) return
+    setFiles([])
+    setStepIndex(0)
+    setIsDemoResultReady(false)
+  }
+
+  const startDemoAnalysis = () => {
+    if (isAnalyzing) return
+    if (files.length === 0) return
+
+    // Önce timer'ları temizleyelim.
+    if (intervalIdRef.current) window.clearInterval(intervalIdRef.current)
+    if (timeoutIdRef.current) window.clearTimeout(timeoutIdRef.current)
+
+    setIsDemoResultReady(false)
+    setIsAnalyzing(true)
+    setStepIndex(0)
+
+    const lastIndex = Math.max(0, ANALYSIS_MESSAGES.length - 1)
+    const intervalMs = 2000
+
+    intervalIdRef.current = window.setInterval(() => {
+      setStepIndex((prev) => Math.min(prev + 1, lastIndex))
+    }, intervalMs)
+
+    timeoutIdRef.current = window.setTimeout(() => {
+      if (intervalIdRef.current) window.clearInterval(intervalIdRef.current)
+      setIsAnalyzing(false)
+      setIsDemoResultReady(true)
+    }, ANALYSIS_MESSAGES.length * intervalMs)
+  }
+
+  return (
+    <div className="mx-auto max-w-6xl px-4">
+      <div className="relative mb-6 overflow-hidden rounded-3xl border border-white/50 bg-white/35 p-6 shadow-sm backdrop-blur-md">
+        <div className="absolute inset-0 -z-10">
+          <div className="heroGradient h-full w-full" />
+          <div className="heroTexture h-full w-full" />
+        </div>
+
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-2 rounded-full bg-emerald-600/10 px-3 py-1 text-sm font-semibold text-emerald-800">
+              <Sparkles size={16} className="h-4 w-4" />
+              Dashboard
+            </div>
+            <h1 className="text-2xl font-semibold">Atık Fotoğraflarınızı Yükleyin</h1>
+            <p className="text-sm text-foreground/70">
+              Yüklenen görseller (şimdilik demo) analiz ediliyor. Ardından panelde
+              sonuç hazırlığı simüle edilecek.
+            </p>
+          </div>
+
+          <div className="w-full lg:max-w-sm">
+            <Card className="rounded-3xl border-white/40 bg-white/20 shadow-sm backdrop-blur-md">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Yükleme Kuralları</CardTitle>
+                <CardDescription>
+                  PRD’ye uygun format ve limitlerle çalışır.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm text-foreground/80">
+                <div className="rounded-2xl border border-white/30 bg-white/15 p-3">
+                  <div className="font-medium">Kabul edilen formatlar</div>
+                  <div className="mt-1 text-foreground/70">JPEG, PNG, WebP</div>
+                </div>
+                <div className="rounded-2xl border border-white/30 bg-white/15 p-3">
+                  <div className="font-medium">Maksimum görsel</div>
+                  <div className="mt-1 text-foreground/70">En fazla 3 fotoğraf</div>
+                </div>
+                <div className="rounded-2xl border border-white/30 bg-white/15 p-3">
+                  <div className="font-medium">Boyut limiti</div>
+                  <div className="mt-1 text-foreground/70">Her biri 10 MB</div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-12 lg:items-start">
+        <div className="lg:col-span-8">
+          <Card className="rounded-3xl border-white/50 bg-white/25 p-4 shadow-sm backdrop-blur-md">
+            <CardHeader className="space-y-1 pb-3">
+              <CardTitle className="text-lg">Sürükle-Bırak Upload</CardTitle>
+              <CardDescription>
+                Önizleme görünür. Analizi başlatınca demo yükleme durumu
+                ekranda belirecek.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <DropZone value={files} onChange={setFiles} disabled={isAnalyzing} />
+
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <Button
+                  type="button"
+                  onClick={startDemoAnalysis}
+                  disabled={isAnalyzing || files.length === 0}
+                  className="h-11 rounded-xl bg-emerald-600 px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-60"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <Loader2 size={16} className="mr-2 h-4 w-4 animate-spin" />
+                      Analiz ediliyor...
+                    </>
+                  ) : (
+                    "AI Analizini Başlat (Demo)"
+                  )}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={reset}
+                  disabled={isAnalyzing || (files.length === 0 && !isDemoResultReady)}
+                  className="h-11 rounded-xl border-white/40 bg-white/10 text-sm"
+                >
+                  Sıfırla
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {isDemoResultReady && (
+            <div className="mt-6 rounded-3xl border border-white/40 bg-white/20 p-5 shadow-sm backdrop-blur-md">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold">Demo Analiz Tamamlandı</h2>
+                  <p className="mt-1 text-sm text-foreground/70">
+                    Bu aşamada gerçek Gemini entegrasyonu yerine yükleme & analiz
+                    akışı simüle ediliyor.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  onClick={reset}
+                  variant="secondary"
+                  className="mt-3 h-11 rounded-xl sm:mt-0"
+                >
+                  Yeni yükleme
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="lg:col-span-4">
+          <div className="space-y-4">
+            <div className="rounded-3xl border border-white/40 bg-white/20 p-5 shadow-sm backdrop-blur-md">
+              <h2 className="text-sm font-semibold text-foreground/90">
+                Sonraki adım (taslak)
+              </h2>
+              <p className="mt-2 text-sm text-foreground/70">
+                Gerçek entegrasyonda görseller Supabase Storage’a yüklenip
+                `/api/analyze` ile Gemini Vision çağrılacak; ardından
+                `/analysis/[sessionId]` sayfasında sonuçlar görüntülenecek.
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-white/40 bg-white/20 p-5 shadow-sm backdrop-blur-md">
+              <h2 className="text-sm font-semibold text-foreground/90">
+                Neler gösteriliyor?
+              </h2>
+              <div className="mt-2 space-y-2 text-sm text-foreground/70">
+                <div>• Dosya format/limitleri</div>
+                <div>• Thumbnail önizleme</div>
+                <div>• Demo loading state (2 sn mesaj değişimi)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <AnalysisLoadingState
+        isOpen={isAnalyzing}
+        stepIndex={stepIndex}
+        messages={ANALYSIS_MESSAGES}
+      />
+    </div>
+  )
+}
+
