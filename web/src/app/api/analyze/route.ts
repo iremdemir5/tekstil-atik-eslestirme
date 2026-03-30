@@ -60,7 +60,6 @@ export async function POST(request: Request) {
     const district = (form.get("district") as string | null) ?? "Kadıköy"
 
     sessionId = crypto.randomUUID()
-    const imagePaths: string[] = []
 
     for (let i = 0; i < normalizedImages.length; i++) {
       const file = normalizedImages[i]
@@ -75,7 +74,6 @@ export async function POST(request: Request) {
         console.error("STORAGE ERROR:", uploaded.error)
         return jsonError(500, { error: "STORAGE_UPLOAD_FAILED", message: "Görsel yüklenemedi." })
       }
-      imagePaths.push(path)
     }
 
     const created = await supabase
@@ -83,12 +81,12 @@ export async function POST(request: Request) {
       .insert({
         id: sessionId,
         producer_id: DEMO_PRODUCER_ID,
-        weight_kg: weightKg,
-        city,
+        // Şema önbelleği / kolon uyumsuzluğu nedeniyle geçici: DB insert sadeleştirildi
+        // weight_kg: weightKg,
+        // city,
         district,
         latitude: 40.9919,
         longitude: 29.0287,
-        image_paths: imagePaths,
         status: "processing",
         processing_started_at: new Date().toISOString(),
       })
