@@ -264,10 +264,23 @@ export async function analyzeTextileWasteWithGeminiVision(params: {
 
         // 404'i yakalayıp diğer kombinasyonları denemeye devam ediyoruz.
         const message = err instanceof Error ? err.message : ""
-        const isNotFound = message.includes("GEMINI_HTTP_404")
-        if (!isNotFound) throw err
+        const isRetryable =
+          message.includes("GEMINI_HTTP_404") ||
+          message.includes("GEMINI_HTTP_429") ||
+          message.includes("GEMINI_PARSE_ERROR")
+        if (!isRetryable) throw err
       }
     }
+  }
+
+  // Tüm model/sürüm kombinasyonları başarısızsa akışı kırmamak için
+  // deterministik fallback analize dönüyoruz.
+  if (
+    lastError instanceof Error &&
+    (lastError.message.includes("GEMINI_PARSE_ERROR") ||
+      lastError.message.includes("GEMINI_HTTP_429"))
+  ) {
+    return simulateGeminiVisionAnalysis(images)
   }
 
   throw lastError ?? new Error("GEMINI_HTTP_FAILED")
