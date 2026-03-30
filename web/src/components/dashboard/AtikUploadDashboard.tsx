@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { Loader2, Sparkles } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 import DropZone from "@/components/upload/DropZone"
 import AnalysisLoadingState from "@/components/upload/AnalysisLoadingState"
@@ -22,10 +23,12 @@ const ANALYSIS_MESSAGES = [
 ]
 
 export default function AtikUploadDashboard() {
+  const router = useRouter()
   const [files, setFiles] = React.useState<File[]>([])
   const [isAnalyzing, setIsAnalyzing] = React.useState(false)
   const [stepIndex, setStepIndex] = React.useState(0)
   const [isDemoResultReady, setIsDemoResultReady] = React.useState(false)
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
 
   const intervalIdRef = React.useRef<number | undefined>(undefined)
   const timeoutIdRef = React.useRef<number | undefined>(undefined)
@@ -45,9 +48,10 @@ export default function AtikUploadDashboard() {
     setFiles([])
     setStepIndex(0)
     setIsDemoResultReady(false)
+    setErrorMessage(null)
   }
 
-  const startDemoAnalysis = () => {
+  const startAnalysis = async () => {
     if (isAnalyzing) return
     if (files.length === 0) return
 
@@ -56,6 +60,7 @@ export default function AtikUploadDashboard() {
     if (timeoutIdRef.current) window.clearTimeout(timeoutIdRef.current)
 
     setIsDemoResultReady(false)
+    setErrorMessage(null)
     setIsAnalyzing(true)
     setStepIndex(0)
 
@@ -67,10 +72,41 @@ export default function AtikUploadDashboard() {
     }, intervalMs)
 
     timeoutIdRef.current = window.setTimeout(() => {
-      if (intervalIdRef.current) window.clearInterval(intervalIdRef.current)
-      setIsAnalyzing(false)
-      setIsDemoResultReady(true)
+      setStepIndex(lastIndex)
     }, ANALYSIS_MESSAGES.length * intervalMs)
+
+    try {
+      const formData = new FormData()
+      files.forEach((f) => formData.append("images", f))
+
+      // Dashboard ekranı şu an sadece "fotoğraf yükle" odaklı.
+      // MVP için zorunlu alanlara demo değerler gönderiyoruz.
+      formData.set("weight_kg", "100")
+      formData.set("city", "İstanbul")
+      formData.set("district", "Kadıköy")
+      formData.set("latitude", "40.9919")
+      formData.set("longitude", "29.0287")
+
+      const res = await fetch("/api/analyze", { method: "POST", body: formData })
+      const json = (await res.json()) as
+        | { sessionId: string; status: string }
+        | { error: string; message: string }
+
+      if (!res.ok) {
+        setErrorMessage("message" in json ? json.message : "Analiz başlatılamadı.")
+        return
+      }
+
+      if (intervalIdRef.current) window.clearInterval(intervalIdRef.current)
+      setIsDemoResultReady(true)
+      router.push(`/analysis/${json.sessionId}`)
+    } catch {
+      setErrorMessage("Bağlantı hatası. Lütfen tekrar deneyin.")
+    } finally {
+      if (intervalIdRef.current) window.clearInterval(intervalIdRef.current)
+      if (timeoutIdRef.current) window.clearTimeout(timeoutIdRef.current)
+      setIsAnalyzing(false)
+    }
   }
 
   return (
@@ -134,10 +170,16 @@ export default function AtikUploadDashboard() {
             <CardContent className="space-y-4">
               <DropZone value={files} onChange={setFiles} disabled={isAnalyzing} />
 
+              {errorMessage && (
+                <div className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                  {errorMessage}
+                </div>
+              )}
+
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <Button
                   type="button"
-                  onClick={startDemoAnalysis}
+                  onClick={startAnalysis}
                   disabled={isAnalyzing || files.length === 0}
                   className="h-11 rounded-xl bg-emerald-600 px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-60"
                 >
@@ -147,7 +189,7 @@ export default function AtikUploadDashboard() {
                       Analiz ediliyor...
                     </>
                   ) : (
-                    "AI Analizini Başlat (Demo)"
+                    "AI Analizini Başlat"
                   )}
                 </Button>
 
@@ -168,10 +210,9 @@ export default function AtikUploadDashboard() {
             <div className="mt-6 rounded-3xl border border-white/40 bg-white/20 p-5 shadow-sm backdrop-blur-md">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold">Demo Analiz Tamamlandı</h2>
+                  <h2 className="text-lg font-semibold">Analiz Tamamlandı</h2>
                   <p className="mt-1 text-sm text-foreground/70">
-                    Bu aşamada gerçek Gemini entegrasyonu yerine yükleme & analiz
-                    akışı simüle ediliyor.
+                    Bu aşamada Gemini entegrasyonu simüle edilerek sonuçlar Supabase’e kaydedildi.
                   </p>
                 </div>
                 <Button

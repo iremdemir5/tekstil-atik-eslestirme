@@ -1,21 +1,36 @@
+import { createSupabaseAdminClient } from "@/lib/supabase"
+
+export const runtime = "nodejs"
+
 export async function GET(
   _request: Request,
   context: { params: { sessionId: string } },
 ) {
-  const { sessionId } = context.params;
-  return Response.json({
-    id: sessionId,
-    status: "pending",
-    weight_kg: 0,
-    city: "—",
-    polymer_composition: {},
-    r_value: 0,
-    recycling_score: 0,
-    polymer_purity_score: 0,
-    recommended_use: "insulation",
-    carbon_saved_kg: 0,
-    analysis_description: "MVP iskelet placeholder.",
-    created_at: new Date().toISOString(),
-  });
+  const { sessionId } = context.params
+  const supabase = createSupabaseAdminClient()
+
+  const { data, error } = await supabase
+    .from("analysis_sessions")
+    .select(
+      "id,status,weight_kg,city,polymer_composition,r_value,recycling_score,polymer_purity_score,recommended_use,carbon_saved_kg,analysis_description,created_at",
+    )
+    .eq("id", sessionId)
+    .maybeSingle()
+
+  if (error) {
+    return new Response(
+      JSON.stringify({ error: "INTERNAL_ERROR", message: "Analiz yüklenemedi." }),
+      { status: 500, headers: { "Content-Type": "application/json" } },
+    )
+  }
+
+  if (!data) {
+    return new Response(
+      JSON.stringify({ error: "NOT_FOUND", message: "Analiz bulunamadı." }),
+      { status: 404, headers: { "Content-Type": "application/json" } },
+    )
+  }
+
+  return Response.json(data)
 }
 
