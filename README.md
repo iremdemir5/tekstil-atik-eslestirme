@@ -6,14 +6,7 @@ Modern, veri odaklı ve yapay zekâ destekli bir tekstil atık eşleştirme dene
 
 ## Proje Amacı
 
-Bu platform, tekstil atıklarını analiz ederek bu atıkların geri dönüşüm ve yeniden değerlendirme süreçlerine en doğru şekilde yönlendirilmesini hedefler.
-
-Proje ile amaçlanan:
-
-- Atık yönetim sürecini dijitalleştirerek hızlandırmak
-- Yapay zekâ destekli analizle karar alma kalitesini artırmak
-- Üretici ve geri dönüşüm paydaşları arasında etkili bir bağ kurmak
-- Sürdürülebilirlik hedeflerine ölçülebilir katkılar sağlamak
+Tekstil endüstrisi, her yıl milyonlarca ton karmaşık atık üreterek çevre üzerinde ciddi bir baskı oluşturuyor. Bu atıkların döngüsel ekonomiye kazandırılmasının önündeki en kritik engel ise kumaşların içeriğindeki polimer karışım oranlarının (pamuk, polyester vb.) hızlı ve güvenilir biçimde tespit edilememesi. Tekstil Atık Eşleştirme Platformu, tam olarak bu endüstriyel probleme odaklanarak geliştirildi. Kullanıcıların sisteme yüklediği atık kumaş fotoğrafları, Google Gemini altyapısı ile saniyeler içinde analiz ediliyor; gelişmiş görsel yorumlama sayesinde kumaşın polimer yapısı yüksek doğrulukla tahmin edilerek karar süreçleri veriyle destekleniyor. Elde edilen analiz sonuçları, atıkların çöpe gitmesini önlemek için onları uygun yalıtım malzemesi üreticilerine veya iplik geri dönüşüm tesislerine yönlendiren akıllı bir eşleştirme akışına dönüştürülüyor. Bu yaklaşım, yalnızca operasyonel verimlilik sağlamıyor; aynı zamanda karbon ayak izini azaltan, kaynak kullanımını iyileştiren ve sürdürülebilirlik performansını ölçülebilir hale getiren bir dönüşüm modeli sunuyor. Next.js, Supabase ve Vercel ile güçlendirilen modern mimarisiyle bu platform, klasik bir yazılım ürününün ötesinde, atığı değerli bir hammaddeden yeniden ekonomik katma değere dönüştüren dijital bir köprü ve sıfır atık vizyonuna yönelik güçlü bir adımdır.
 
 ---
 
