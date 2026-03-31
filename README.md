@@ -1,5 +1,12 @@
 # Tekstil Atık Eşleştirme Platformu
 
+## 🚀 Proje Bağlantıları
+
+- 🌍 **Canlı Site (Yayın Linki):** [https://tekstil-atik-eslestirme.vercel.app/](https://tekstil-atik-eslestirme.vercel.app/)
+- 🎬 **Proje Demo Videosu:** [https://www.loom.com/share/fa82fa9dee044b90954da26deb3a334a](https://www.loom.com/share/fa82fa9dee044b90954da26deb3a334a)
+
+---
+
 Modern, veri odaklı ve yapay zekâ destekli bir tekstil atık eşleştirme deneyimi sunan portfolyo projesi.
 
 ---
