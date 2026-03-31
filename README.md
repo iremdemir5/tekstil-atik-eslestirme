@@ -1,51 +1,51 @@
-# ReTherm Panel
+# Tekstil Atık Eşleştirme Platformu
 
-Modern, veri odakli ve yapay zeka destekli bir tekstil atik eslestirme deneyimi sunan portfolyo projesi.
-
----
-
-## Proje Amaci
-
-`ReTherm Panel`, tekstil atiklarini analiz ederek bu atiklarin geri donusum ve yeniden degerlendirme sureclerine en dogru sekilde yonlendirilmesini hedefler.
-
-Proje ile amaclanan:
-
-- Atik yonetim surecini dijitallestirerek hizlandirmak
-- YZ destekli analizle karar alma kalitesini artirmak
-- Uretici ve geri donusum paydaslari arasinda etkili bir bag kurmak
-- Surdurulebilirlik hedeflerine olculebilir katkilar saglamak
+Modern, veri odaklı ve yapay zekâ destekli bir tekstil atık eşleştirme deneyimi sunan portfolyo projesi.
 
 ---
 
-## Teknoloji Yigini
+## Proje Amacı
 
-Proje gelistirme surecinde asagidaki temel teknolojiler kullanildi:
+Bu platform, tekstil atıklarını analiz ederek bu atıkların geri dönüşüm ve yeniden değerlendirme süreçlerine en doğru şekilde yönlendirilmesini hedefler.
 
-- **Next.js** - Modern, hizli ve SEO dostu web arayuzu
-- **Gemini API** - Yapay zeka destekli analiz ve akilli oneriler
-- **Vercel** - Hizli deployment ve kesintisiz yayinlama altyapisi
-- **Supabase** - Gercek zamanli veritabani ve backend servisleri
+Proje ile amaçlanan:
+
+- Atık yönetim sürecini dijitalleştirerek hızlandırmak
+- Yapay zekâ destekli analizle karar alma kalitesini artırmak
+- Üretici ve geri dönüşüm paydaşları arasında etkili bir bağ kurmak
+- Sürdürülebilirlik hedeflerine ölçülebilir katkılar sağlamak
 
 ---
 
-## Uygulama Gorselleri
+## Teknoloji Yığını
+
+Proje geliştirme sürecinde aşağıdaki temel teknolojiler kullanıldı:
+
+- **Next.js** - Modern, hızlı ve SEO dostu web arayüzü
+- **Gemini API** - Yapay zekâ destekli analiz ve akıllı öneriler
+- **Vercel** - Hızlı deployment ve kesintisiz yayınlama altyapısı
+- **Supabase** - Gerçek zamanlı veritabanı ve backend servisleri
+
+---
+
+## Uygulama Görselleri
 
 <p align="center">
-  <img src="public/screenshots/1.png" alt="ReTherm Panel Ekran Goruntusu 1" width="48%" />
-  <img src="public/screenshots/2.png" alt="ReTherm Panel Ekran Goruntusu 2" width="48%" />
+  <img src="fotolar/1.png" alt="Uygulama ekran görüntüsü 1" width="48%" />
+  <img src="fotolar/2.png" alt="Uygulama ekran görüntüsü 2" width="48%" />
 </p>
 
 <p align="center">
-  <img src="public/screenshots/3.png" alt="ReTherm Panel Ekran Goruntusu 3" width="48%" />
-  <img src="public/screenshots/4.png" alt="ReTherm Panel Ekran Goruntusu 4" width="48%" />
+  <img src="fotolar/3.png" alt="Uygulama ekran görüntüsü 3" width="48%" />
+  <img src="fotolar/4.png" alt="Uygulama ekran görüntüsü 4" width="48%" />
 </p>
 
 <p align="center">
-  <img src="public/screenshots/5.png" alt="ReTherm Panel Ekran Goruntusu 5" width="70%" />
+  <img src="fotolar/5.png" alt="Uygulama ekran görüntüsü 5" width="70%" />
 </p>
 
 ---
 
-## Kisa Not
+## Kısa Not
 
-Bu README, ReTherm Panel projesini portfolyo sunumu icin sade, profesyonel ve etkileyici bir yapiyla tanitmak uzere hazirlandi.
+Bu README, projeyi portfolyo sunumu için sade, profesyonel ve etkileyici bir yapıyla tanıtmak üzere hazırlandı.
