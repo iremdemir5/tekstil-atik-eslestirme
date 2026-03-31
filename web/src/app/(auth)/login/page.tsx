@@ -19,6 +19,14 @@ function isValidEmail(email: string) {
 }
 
 export default function LoginPage() {
+  return (
+    <React.Suspense fallback={<LoginPageFallback />}>
+      <LoginPageContent />
+    </React.Suspense>
+  );
+}
+
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") ?? "/upload";
@@ -233,6 +241,25 @@ export default function LoginPage() {
             Not: Bu aşamada auth submit’i backend’e bağlı değil. Butona basınca
             (geçerli form varsa) ilgili sayfaya yönlendirilirsiniz.
           </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function LoginPageFallback() {
+  return (
+    <div className="relative mx-auto max-w-6xl px-4 pb-12">
+      <div className="grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-10">
+        <main className="space-y-4 lg:col-start-2">
+          <Card className="rounded-3xl border-white/50 bg-white/40 shadow-sm backdrop-blur-md">
+            <CardContent className="flex min-h-64 items-center justify-center">
+              <div className="flex items-center gap-2 text-sm text-foreground/70">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Sayfa yukleniyor...
+              </div>
+            </CardContent>
+          </Card>
         </main>
       </div>
     </div>
